@@ -2,8 +2,8 @@ import { memory } from "wasm-game-of-life/wasm_game_of_life_bg";
 import { Universe, Cell } from "wasm-game-of-life";
 
 const GRID_COLOR = "#CCCCCC";
-const HEIGHT = 640;
-const WIDTH = 640;
+const HEIGHT = 1280;
+const WIDTH = 1280;
 // Construct the universe, and get its width and height.
 const universe = Universe.new();
 const width = universe.width();
@@ -14,6 +14,9 @@ const height = universe.height();
 const canvas = document.getElementById("game-of-life-canvas");
 canvas.height = HEIGHT;
 canvas.width = WIDTH;
+canvas.style.height = HEIGHT + 'px';
+canvas.style.width = WIDTH + 'px';
+
 
 const ctx = canvas.getContext('2d');
 
@@ -53,12 +56,12 @@ const drawGrid = () => {
     const cellsPtr = universe.cells();
     const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
   
-    const imageData = ctx.createImageData(640, 640);
+    const imageData = ctx.createImageData(HEIGHT, WIDTH);
 
     // Iterate through every pixel
     for (let i = 0; i < cells.length; i += 1) {
         const index = (i * 4);
-        if( cells[i] === Cell.Dead) {
+        if( cells[i] === Cell.Alive) {
             imageData.data[index + 0] = 255;
             imageData.data[index + 1] = 255;
             imageData.data[index + 2] = 255;

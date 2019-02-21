@@ -17,7 +17,7 @@ cfg_if! {
 }
 
 #[wasm_bindgen]
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Cell {
     Dead = 0,
@@ -88,12 +88,13 @@ impl Universe {
     }
 
     pub fn new() -> Universe {
-        let width = 640;
-        let height = 640;
+        let width = 1280;
+        let height = 1280;
 
         let cells = (0..width * height)
             .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
+                if i%2==0 || i%7==0  {
+                // if i > width*height/2 && i<(width*height/2+200)  {
                     Cell::Alive
                 } else {
                     Cell::Dead

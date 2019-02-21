@@ -1,13 +1,97 @@
-import { memory } from "wasm-game-of-life/wasm_game_of_life_bg";
-import { Universe, Cell } from "wasm-game-of-life";
+// import { memory } from "wasm-game-of-life/wasm_game_of_life_bg";
+// import { Universe, Cell } from "wasm-game-of-life";
 
-const GRID_COLOR = "#CCCCCC";
 const HEIGHT = 640;
 const WIDTH = 640;
+
+var Immutable = require('immutable')
+
+var relativeNeighbours = Immutable.List([
+  [-1, -1],
+  [-1, 0],
+  [-1, 1],
+  [0, -1],
+  [0, 1],
+  [1, -1],
+  [1, 0],
+  [1, 1]
+])
+
+function neighbourPositions (r, c) {
+  return relativeNeighbours.map(function (relativeNeighbour) {
+    return [relativeNeighbour[0] + r, relativeNeighbour[1] + c]
+  })
+}
+function getNeighbours (r, c, board) {
+  return neighbourPositions(r, c).map(function (neighbourPosition) {
+    return board.cells[board.getIndex(neighbourPosition[0],neighbourPosition[1])]
+  })
+}
+
+function countAliveNeighbours (r, c, board) {
+    var neighbours = getNeighbours(r, c, board)
+    // console.log(neighbours);
+    return neighbours.filter(function (cell) { return cell && cell === 1 }).count()
+}
+
+class Universe {
+    constructor() {
+        this.height = HEIGHT;
+        this.width = WIDTH;
+        let cells = new Uint8Array(HEIGHT*WIDTH);
+        for (let i = 0; i < cells.length; i += 1) {
+            if (i % 2 == 0 || i % 7 == 0) {
+                cells[i] = 1;
+            } else {
+                cells[i] = 0;
+            }
+        }
+        this.cells = cells;
+        // console.log(this.cells);
+    }
+
+    getNeighbourIndex(row, column) {
+        return (row * this.width + column)
+    }
+
+    getIndex(row, column) {
+        return (row * this.width + column)
+    }
+
+    tick() {
+        var next = new Uint8Array(HEIGHT*WIDTH);
+
+        for (let row = 0; row < HEIGHT; row += 1) {
+            for (let col = 0; col < WIDTH; col += 1) {
+                let idx = this.getIndex(row, col);
+                let cell = this.cells[idx];
+                let live_neighbors = countAliveNeighbours(row, col, this);
+                // console.log(live_neighbors);
+                let next_cell = 0;
+                if (live_neighbors < 2) {
+                    next_cell= 0;
+                }else if (live_neighbors === 3) {
+                    next_cell= 1;
+                }else if (live_neighbors > 3) {
+                    next_cell= 0;
+                }else {
+                    next_cell = cell;
+                }
+                
+
+                next[idx] = next_cell;
+            }
+        }
+        // console.log(next);
+        this.cells = next;
+        // console.log(next);
+    }
+}
+
+const GRID_COLOR = "#CCCCCC";
+
 // Construct the universe, and get its width and height.
-const universe = Universe.new();
-const width = universe.width();
-const height = universe.height();
+const universe = new Universe();
 
 // Give the canvas room for all of our cells and a 1px border
 // around each of them.
@@ -25,40 +109,16 @@ const renderLoop = () => {
 
   requestAnimationFrame(renderLoop);
 };
-
-const drawGrid = () => {
-    ctx.beginPath();
-    ctx.strokeStyle = GRID_COLOR;
-  
-    // Vertical lines.
-    for (let i = 0; i <= width; i++) {
-      ctx.moveTo(i * (CELL_SIZE + 1) + 1, 0);
-      ctx.lineTo(i * (CELL_SIZE + 1) + 1, (CELL_SIZE + 1) * height + 1);
-    }
-  
-    // Horizontal lines.
-    for (let j = 0; j <= height; j++) {
-      ctx.moveTo(0,                           j * (CELL_SIZE + 1) + 1);
-      ctx.lineTo((CELL_SIZE + 1) * width + 1, j * (CELL_SIZE + 1) + 1);
-    }
-  
-    ctx.stroke();
-  };
-
-  const getIndex = (row, column) => {
-    return row * width + column;
-  };
   
   const drawCells = () => {
-    const cellsPtr = universe.cells();
-    const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
+    const cells = universe.cells;
   
     const imageData = ctx.createImageData(640, 640);
 
     // Iterate through every pixel
     for (let i = 0; i < cells.length; i += 1) {
         const index = (i * 4);
-        if( cells[i] === Cell.Dead) {
+        if( cells[i] === 0) {
             imageData.data[index + 0] = 255;
             imageData.data[index + 1] = 255;
             imageData.data[index + 2] = 255;
@@ -75,4 +135,5 @@ const drawGrid = () => {
 
 // drawGrid();
 drawCells();
+// universe.tick();
 requestAnimationFrame(renderLoop);

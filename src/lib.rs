@@ -17,7 +17,7 @@ cfg_if! {
 }
 
 #[wasm_bindgen]
-#[repr(u8)]
+#[repr(u32)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Cell {
     Dead = 0,
@@ -88,8 +88,8 @@ impl Universe {
     }
 
     pub fn new() -> Universe {
-        let width = 64;
-        let height = 64;
+        let width = 640;
+        let height = 640;
 
         let cells = (0..width * height)
             .map(|i| {
